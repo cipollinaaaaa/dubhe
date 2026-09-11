@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Sfida di Dubhe - Venusian People</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'Courier New', monospace;
+    background: linear-gradient(180deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    color: #fff;
+  }
+
+  .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  .star { position: absolute; background: #fff; border-radius: 50%; animation: twinkle 2s infinite; }
+  @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+
+  .game-container { position: relative; z-index: 10; text-align: center; padding: 10px; max-width: 750px; width: 100%; }
+  
+  .logo-container {
+    margin: 0 auto 8px;
+    width: 70px;
+    height: 70px;
+    animation: logoSpin 20s linear infinite;
+  }
+  
+  @keyframes logoSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .title { font-size: clamp(1.3rem, 3.5vw, 2rem); color: #ffd700; text-shadow: 0 0 15px #ffd700, 0 0 30px #ff8c00; margin: 5px 0; letter-spacing: 2px; font-weight: bold; }
+  .subtitle { font-size: clamp(0.75rem, 2vw, 0.9rem); color: #a8d8ff; margin: 5px 0 10px; opacity: 0.9; }
+  .dubhe { font-size: clamp(2.5rem, 6vw, 4rem); margin: 5px 0; animation: pulse 1.5s infinite; filter: drop-shadow(0 0 20px #ffd700); }
+  @keyframes pulse { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.15) rotate(5deg); } }
+
+  .instruction { font-size: clamp(0.95rem, 2.5vw, 1.2rem); margin: 10px 0; min-height: 45px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+  .color-target { display: inline-block; padding: 6px 20px; border-radius: 25px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 0 20px currentColor; margin-left: 10px; border: 2px solid #fff; }
+
+  .astronauts { 
+    display: flex; 
+    justify-content: center; 
+    flex-wrap: wrap; 
+    gap: 10px; 
+    margin: 15px auto; 
+    max-width: 650px;
+  }
+  
+  .astronaut { 
+    width: clamp(65px, 14vw, 85px); 
+    height: clamp(100px, 20vw, 130px); 
+    cursor: pointer; 
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: flex-start;
+    padding-top: 5px;
+    user-select: none; 
+    filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
+  }
+  .astronaut:hover { transform: translateY(-10px) scale(1.15); filter: drop-shadow(0 15px 15px rgba(255,255,255,0.3)); }
+  .astronaut:active { transform: scale(0.9); }
+  .astronaut svg { width: 100%; height: 100%; overflow: visible; }
+
+  .score-board { display: flex; justify-content: center; gap: 10px; margin: 10px 0; font-size: clamp(0.85rem, 2vw, 1rem); flex-wrap: wrap; }
+  .score-item { background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px); }
+  .score-item span { color: #ffd700; font-weight: bold; font-size: 1.2em; }
+
+  .timer-bar { width: 75%; max-width: 350px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; margin: 10px auto; border: 1px solid rgba(255,255,255,0.2); }
+  .timer-fill { height: 100%; background: linear-gradient(90deg, #ff4444, #ffaa00, #44ff44); transition: width 0.05s linear; border-radius: 5px; }
+
+  .btn { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #1a0f2e; border: none; padding: 12px 35px; font-size: 1.1rem; font-weight: bold; border-radius: 30px; cursor: pointer; font-family: inherit; letter-spacing: 2px; text-transform: uppercase; transition: all 0.3s; box-shadow: 0 5px 20px rgba(255,215,0,0.4); margin-top: 15px; }
+  .btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 30px rgba(255,215,0,0.6); }
+
+  .mute-btn { position: fixed; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(5px); transition: all 0.3s; }
+  .mute-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
+
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn 0.5s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .final-message { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; margin: 15px auto; border: 2px solid #ffd700; max-width: 450px; backdrop-filter: blur(10px); }
+  .final-message h2 { color: #ffd700; margin-bottom: 12px; font-size: 1.4rem; }
+  .event-info { margin-top: 12px; font-size: 0.9rem; line-height: 1.5; }
+  .event-info a { color: #a8d8ff; text-decoration: none; font-weight: bold; }
+
+  .shake { animation: shake 0.4s; }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px) rotate(-5deg); } 75% { transform: translateX(10px) rotate(5deg); } }
+  .correct-flash { animation: correctFlash 0.5s; }
+  @keyframes correctFlash { 0% { filter: drop-shadow(0 0 0 0 rgba(68,255,68,0.7)); transform: scale(1); } 50% { filter: drop-shadow(0 0 30px 10px rgba(68,255,68,0.8)); transform: scale(1.2); } 100% { filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); transform: scale(1); } }
+
+  .victory-burst {
+    animation: victoryBurst 1s ease-out;
+  }
+  @keyframes victoryBurst {
+    0% { transform: scale(0) rotate(0deg); opacity: 0; }
+    50% { transform: scale(1.5) rotate(180deg); opacity: 1; }
+    100% { transform: scale(1) rotate(360deg); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<button class="mute-btn" id="muteBtn" onclick="toggleMute()">🔊</button>
+<div class="stars" id="stars"></div>
+
+<div class="game-container">
+  <div class="screen active" id="startScreen">
+    <div class="logo-container" id="logoStart"></div>
+    <div class="title">🌟 LA SFIDA DI DUBHE 🌟</div>
+    <div class="subtitle">Venusian People presenta</div>
+    <div class="dubhe">⭐</div>
+    <p style="margin: 10px auto; font-size: 1rem; line-height: 1.5; max-width: 450px;">
+      Dubhe ti mostrerà un colore.<br>
+      Clicca sull'astronauta giusto!<br><br>
+      <span style="color: #ffd700;">🐫 10 punti = invito </span>
+    </p>
+    <button class="btn" onclick="startGame()">INIZIA</button>
+  </div>
+
+  <div class="screen" id="gameScreen">
+    <div class="logo-container" id="logoGame"></div>
+    <div class="title" style="font-size: 1.4rem;">LA SFIDA DI DUBHE</div>
+    <div class="score-board">
+      <div class="score-item">Punti: <span id="score">0</span></div>
+      <div class="score-item">Vite: <span id="lives">❤️❤️❤️</span></div>
+      <div class="score-item">Record: <span id="highScore">0</span></div>
+    </div>
+    <div class="dubhe">⭐</div>
+    <div class="instruction">Dubhe dice: <span class="color-target" id="colorTarget">?</span></div>
+    <div class="timer-bar"><div class="timer-fill" id="timerFill" style="width: 100%;"></div></div>
+    <div class="astronauts" id="astronauts"></div>
+  </div>
+
+  <div class="screen" id="endScreen">
+    <div class="logo-container victory-burst" id="logoEnd"></div>
+    <div class="title" id="endTitle">MISSIONE COMPLETATA!</div>
+    <div class="dubhe">🏆</div>
+    <div class="final-message">
+      <h2 id="endMessage">Sei un vero Camelliere!</h2>
+      <p style="font-size: 1.1rem;">Punteggio: <span id="finalScore" style="color: #ffd700; font-size: 1.4em; font-weight: bold;">0</span></p>
+      <div class="event-info">
+        <p><strong>🚀 L'INIZIAZIONE DEI CAMELLIERI 🐫</strong></p>
+        <p>Domenica 20 Settembre - Ore 12:30</p>
+        <p>Ritrovo ai Colli di San Fermo</p>
+        <p>Comune di Adrara San Martino, BG</p>
+        <p>Via Casina del Monte 2</p>
+        <p style="margin-top: 10px;">✉️ <a href="mailto:venusianpeople@gmail.com">venusianpeople@gmail.com</a></p>
+        <p style="margin-top: 8px; font-size: 0.85rem; opacity: 0.8; font-style: italic;">* Portate qualcosa da sgranocchiare *</p>
+      </div>
+    </div>
+    <button class="btn" onclick="resetGame()">GIOCA ANCORA</button>
+  </div>
+</div>
+
+<script>
+  // --- LOGO SVG DE VENUSIAN PEOPLE ---
+  const logoSVG = `
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="100" r="98" fill="#e63946"/>
+      <circle cx="100" cy="100" r="84" fill="#06d6a0"/>
+      <circle cx="100" cy="100" r="70" fill="#ffd60a"/>
+      <circle cx="100" cy="100" r="56" fill="#118ab2"/>
+      <circle cx="100" cy="100" r="42" fill="#9b5de5"/>
+      <circle cx="100" cy="100" r="28" fill="#f15bb5"/>
+      <circle cx="100" cy="100" r="14" fill="#ffffff"/>
+      <circle cx="100" cy="100" r="5" fill="#000000"/>
+    </svg>
+  `;
+
+  document.getElementById('logoStart').innerHTML = logoSVG;
+  document.getElementById('logoGame').innerHTML = logoSVG;
+  document.getElementById('logoEnd').innerHTML = logoSVG;
+
+  // --- SISTEMA DE AUDIO ---
+  const AudioSys = {
+    ctx: null,
+    isMuted: false,
+    bgmInterval: null,
+    
+    init() {
+      if (!this.ctx) {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+    },
+
+    playTone(freq, type, duration, startTime = 0, volume = 0.1) {
+      if (this.isMuted || !this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime + startTime);
+      gain.gain.setValueAtTime(volume, this.ctx.currentTime + startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + startTime + duration);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(this.ctx.currentTime + startTime);
+      osc.stop(this.ctx.currentTime + startTime + duration);
+    },
+
+    playNoise(duration, startTime = 0, volume = 0.15) {
+      if (this.isMuted || !this.ctx) return;
+      const bufferSize = this.ctx.sampleRate * duration;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(volume, this.ctx.currentTime + startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + startTime + duration);
+      noise.connect(gain);
+      gain.connect(this.ctx.destination);
+      noise.start(this.ctx.currentTime + startTime);
+    },
+
+    startBGM() {
+      if (this.bgmInterval) return;
+      const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63];
+      let noteIndex = 0;
+      this.bgmInterval = setInterval(() => {
+        if (!this.isMuted && this.ctx) {
+          this.playTone(notes[noteIndex], 'sine', 0.3, 0, 0.05);
+          this.playTone(notes[noteIndex] / 2, 'triangle', 0.4, 0, 0.03);
+          noteIndex = (noteIndex + 1) % notes.length;
+        }
+      }, 250);
+    },
+
+    stopBGM() {
+      clearInterval(this.bgmInterval);
+      this.bgmInterval = null;
+    },
+
+    playCorrect() {
+      this.playTone(523.25, 'square', 0.1, 0, 0.1);
+      this.playTone(659.25, 'square', 0.1, 0.1, 0.1);
+      this.playTone(783.99, 'square', 0.2, 0.2, 0.1);
+    },
+
+    playWrong() {
+      this.playTone(150, 'sawtooth', 0.3, 0, 0.1);
+      this.playTone(100, 'sawtooth', 0.3, 0.15, 0.1);
+    },
+
+    playStart() {
+      [261.63, 329.63, 392.00, 523.25, 659.25, 783.99].forEach((freq, i) => {
+        this.playTone(freq, 'square', 0.15, i * 0.08, 0.1);
+      });
+    },
+
+    playEpicVictory() {
+      this.playNoise(0.8, 0, 0.2);
+      this.playTone(60, 'sawtooth', 0.8, 0, 0.2);
+      this.playTone(80, 'square', 0.6, 0.1, 0.15);
+      
+      const fanfare = [
+        { freq: 523.25, time: 0.3 },
+        { freq: 659.25, time: 0.45 },
+        { freq: 783.99, time: 0.6 },
+        { freq: 1046.50, time: 0.75 },
+        { freq: 783.99, time: 0.95 },
+        { freq: 1046.50, time: 1.1 },
+        { freq: 1318.51, time: 1.3 },
+        { freq: 1567.98, time: 1.5 },
+      ];
+      
+      fanfare.forEach(note => {
+        this.playTone(note.freq, 'square', 0.3, note.time, 0.12);
+        this.playTone(note.freq / 2, 'triangle', 0.4, note.time, 0.08);
+        this.playTone(note.freq * 1.5, 'sine', 0.2, note.time + 0.05, 0.06);
+      });
+      
+      const finalChord = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+      finalChord.forEach(freq => {
+        this.playTone(freq, 'square', 1.5, 1.7, 0.1);
+        this.playTone(freq, 'sawtooth', 1.5, 1.7, 0.05);
+      });
+      
+      this.playNoise(1.5, 1.7, 0.1);
+      this.playTone(100, 'sawtooth', 1.5, 1.7, 0.15);
+    },
+
+    playLose() {
+      [392.00, 349.23, 311.13, 261.63].forEach((freq, i) => {
+        this.playTone(freq, 'sawtooth', 0.4, i * 0.2, 0.1);
+      });
+    }
+  };
+
+  function toggleMute() {
+    AudioSys.isMuted = !AudioSys.isMuted;
+    document.getElementById('muteBtn').textContent = AudioSys.isMuted ? '🔇' : '🔊';
+    if (AudioSys.isMuted) AudioSys.stopBGM();
+    else if (document.getElementById('gameScreen').classList.contains('active')) AudioSys.startBGM();
+  }
+
+  // --- ESTRELLAS ---
+  const starsContainer = document.getElementById('stars');
+  for (let i = 0; i < 150; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    const size = Math.random() * 3 + 1;
+    star.style.width = size + 'px';
+    star.style.height = size + 'px';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.animationDelay = Math.random() * 2 + 's';
+    star.style.animationDuration = (Math.random() * 2 + 1) + 's';
+    starsContainer.appendChild(star);
+  }
+
+  // --- COLORES ---
+  const colors = [
+    { name: 'ROSSO', hex: '#e63946' }, { name: 'VERDE', hex: '#40916c' },
+    { name: 'GIALLO', hex: '#ffd60a' }, { name: 'BLU', hex: '#457b9d' },
+    { name: 'BIANCO', hex: '#f1faee' }, { name: 'ROSA', hex: '#ff6b9d' },
+    { name: 'AZZURRO', hex: '#48cae4' }, { name: 'NERO', hex: '#2b2d42' }
+  ];
+
+  // --- ASTRONAUTA SVG ---
+  const astronautSVG = `
+    <svg viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg">
+      <line x1="50" y1="8" x2="50" y2="3" stroke="#95a5a6" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="50" cy="3" r="4" fill="#e74c3c"/>
+      <circle cx="50" cy="32" r="26" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="3"/>
+      <path d="M 28 32 Q 50 50 72 32 Q 72 18 50 18 Q 28 18 28 32 Z" fill="#2c3e50" opacity="0.9"/>
+      <path d="M 33 24 Q 42 20 50 20" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.7"/>
+      <rect x="27" y="48" width="46" height="45" rx="8" fill="#7f8c8d" stroke="#2c3e50" stroke-width="2"/>
+      <path d="M 32 53 C 22 72, 27 105, 37 105 C 47 105, 53 105, 63 105 C 73 105, 78 72, 68 53 Z" fill="var(--suit-color)" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+      <path d="M 34 62 C 18 72, 13 86, 18 91" stroke="var(--suit-color)" stroke-width="11" stroke-linecap="round" fill="none"/>
+      <path d="M 66 62 C 82 72, 87 86, 82 91" stroke="var(--suit-color)" stroke-width="11" stroke-linecap="round" fill="none"/>
+      <circle cx="18" cy="91" r="5" fill="#ecf0f1"/>
+      <circle cx="82" cy="91" r="5" fill="#ecf0f1"/>
+      <path d="M 40 105 L 40 128" stroke="var(--suit-color)" stroke-width="13" stroke-linecap="round"/>
+      <path d="M 60 105 L 60 128" stroke="var(--suit-color)" stroke-width="13" stroke-linecap="round"/>
+      <ellipse cx="40" cy="131" rx="9" ry="5" fill="#2c3e50"/>
+      <ellipse cx="60" cy="131" rx="9" ry="5" fill="#2c3e50"/>
+    </svg>`;
+
+  let score = 0, lives = 3, highScore = localStorage.getItem('dubheHighScore') || 0;
+  let currentColor = null, timer = null, timeLeft = 100, gameActive = false, difficulty = 3000;
+  document.getElementById('highScore').textContent = highScore;
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function startGame() {
+    AudioSys.init();
+    AudioSys.playStart();
+    score = 0; lives = 3; difficulty = 3000; gameActive = true;
+    updateScore(); showScreen('gameScreen');
+    setTimeout(() => { AudioSys.startBGM(); nextRound(); }, 600);
+  }
+
+  function nextRound() {
+    if (!gameActive) return;
+    if (score > 0 && score % 5 === 0) difficulty = Math.max(1500, difficulty - 300);
+    currentColor = colors[Math.floor(Math.random() * colors.length)];
+    const target = document.getElementById('colorTarget');
+    target.textContent = currentColor.name;
+    target.style.background = currentColor.hex;
+    target.style.color = (currentColor.name === 'BIANCO' || currentColor.name === 'GIALLO') ? '#000' : '#fff';
+    target.style.boxShadow = `0 0 20px ${currentColor.hex}`;
+    renderAstronauts(); startTimer();
+  }
+
+  function renderAstronauts() {
+    const container = document.getElementById('astronauts');
+    container.innerHTML = '';
+    const shuffled = [...colors].sort(() => Math.random() - 0.5);
+    shuffled.forEach(color => {
+      const astro = document.createElement('div');
+      astro.className = 'astronaut';
+      astro.style.setProperty('--suit-color', color.hex);
+      astro.innerHTML = astronautSVG;
+      astro.onclick = () => checkAnswer(color, astro);
+      container.appendChild(astro);
+    });
+  }
+
+  function startTimer() {
+    clearInterval(timer); 
+    timeLeft = 100;
+    const fill = document.getElementById('timerFill'); 
+    fill.style.width = '100%';
+    const interval = 50; 
+    const decrement = (interval / difficulty) * 100;
+    timer = setInterval(() => {
+      timeLeft -= decrement; 
+      fill.style.width = timeLeft + '%';
+      if (timeLeft <= 0) { 
+        clearInterval(timer); 
+        wrongAnswer(); 
+      }
+    }, interval);
+  }
+
+  function checkAnswer(color, element) {
+    if (!gameActive) return; 
+    clearInterval(timer);
+    if (color.name === currentColor.name) {
+      score++; 
+      AudioSys.playCorrect();
+      element.classList.add('correct-flash'); 
+      updateScore();
+      if (score >= 10) setTimeout(() => endGame(true), 600);
+      else setTimeout(nextRound, 600);
+    } else {
+      element.classList.add('shake');
+      setTimeout(() => element.classList.remove('shake'), 400);
+      wrongAnswer();
+    }
+  }
+
+  function wrongAnswer() {
+    lives--; 
+    AudioSys.playWrong(); 
+    updateScore();
+    if (lives <= 0) setTimeout(() => endGame(false), 600);
+    else setTimeout(nextRound, 800);
+  }
+
+  function updateScore() {
+    document.getElementById('score').textContent = score;
+    document.getElementById('lives').textContent = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+  }
+
+  function endGame(won) {
+    gameActive = false; 
+    clearInterval(timer); 
+    AudioSys.stopBGM();
+    if (score > highScore) { 
+      highScore = score; 
+      localStorage.setItem('dubheHighScore', highScore); 
+    }
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('highScore').textContent = highScore;
+    if (won) {
+      AudioSys.playEpicVictory();
+      document.getElementById('endTitle').textContent = 'SEI UN VERO CAMELLIERE! ';
+      document.getElementById('endMessage').textContent = 'Dubhe ti ha scelto! Pronto per l\'iniziazione!';
+    } else {
+      AudioSys.playLose();
+      document.getElementById('endTitle').textContent = 'MISSIONE FALLITA ';
+      document.getElementById('endMessage').textContent = 'Riprova...';
+    }
+    showScreen('endScreen');
+  }
+
+  function resetGame() { 
+    showScreen('startScreen'); 
+  }
+</script>
+</body>
+</html>
