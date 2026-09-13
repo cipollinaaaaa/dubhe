@@ -148,7 +148,8 @@
       <h2 id="endMessage">Sei un vero Camelliere!</h2>
       <p style="font-size: 1.1rem;">Punteggio: <span id="finalScore" style="color: #ffd700; font-size: 1.4em; font-weight: bold;">0</span></p>
       <div class="event-info">
-        <p><strong>🚀 L'INIZIAZIONE DEI CAMELLIERI 🐫</strong></p>
+        <!-- CAMBIO 1: Aquí dice INTUTAZIONE -->
+        <p><strong>🚀 L'INTUTAZIONE DEI CAMELLIERI 🐫</strong></p>
         <p>Domenica 20 Settembre - Ore 12:30</p>
         <p>Ritrovo ai Colli di San Fermo</p>
         <p>Comune di Adrara San Martino, BG</p>
@@ -452,7 +453,8 @@
     if (won) {
       AudioSys.playEpicVictory();
       document.getElementById('endTitle').textContent = 'SEI UN VERO CAMELLIERE! ';
-      document.getElementById('endMessage').textContent = 'Dubhe ti ha scelto! Pronto per l\'iniziazione!';
+      // CAMBIO 2: Aquí dice intutazione
+      document.getElementById('endMessage').textContent = 'Dubhe ti ha scelto! Pronto per l\'intutazione!';
     } else {
       AudioSys.playLose();
       document.getElementById('endTitle').textContent = 'MISSIONE FALLITA ';
